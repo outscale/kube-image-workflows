@@ -1,0 +1,68 @@
+name: Build images
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    strategy:
+        matrix:
+            REGION: ["us-east-2", "eu-west-2"]
+            TARGET: ["ubuntu-2204", "ubuntu-2404"]
+    runs-on: [self-hosted, linux, "${{ matrix.REGION }}"]
+    environment: ${{ matrix.REGION }}
+    steps:
+    - name: ⬇️ Checkout repository
+      uses: actions/checkout@v4
+    - name: ⬇️ Checkout image builder repository
+      uses: actions/checkout@v4
+      with:
+        repository: 'outscale/kubernetes-image-builder'
+        path: "image-builder"
+        ref: "image_name"
+    - name: ⬇️ Install ansible
+      run: |
+        python3 -m pip install ansible
+    - name: ⬇️ Install deps
+      run: |
+        cd image-builder/images/capi
+        make deps-osc
+    - name: 📦 Build image
+      run: |
+        cd image-builder/images/capi
+        useradd imagebuilder
+        sed -i 's/"type": "ansible"/"type": "ansible","user":"imagebuilder"/' packer/outscale/packer.json
+        SERIES=`echo $KUBERNETES_VERSION | sed 's/\(v1.[1-9][0-9]\).*$/\1/'`
+        DEB=`echo $KUBERNETES_VERSION | sed 's/v//'`
+        export PACKER_FLAGS="--var kubernetes_semver=$KUBERNETES_VERSION --var kubernetes_series=$SERIES --var kubernetes_deb_version=$DEB-1.1"
+        make build-osc-${{ matrix.TARGET }}
+        date=`date +%Y-%m-%d`
+        echo "IMAGE_NAME=${{ matrix.TARGET }}-kubernetes-$KUBERNETES_VERSION-$date" | tee $GITHUB_ENV
+      env:
+        KUBERNETES_VERSION: ${{ github.ref_name }}
+        OSC_ACCESS_KEY: ${{ secrets.OSC_ACCESS_KEY }}
+        OSC_SECRET_KEY: ${{ secrets.OSC_SECRET_KEY }}
+        OSC_REGION: ${{ matrix.REGION }}
+        OSC_ACCOUNT_ID: ${{ secrets.OSC_ACCOUNT_ID }}
+    - name: 🧹 Frieza
+      uses: outscale/frieza-github-actions/frieza-clean@master
+      with:
+        access_key: ${{ secrets.OSC_ACCESS_KEY }}
+        secret_key: ${{ secrets.OSC_SECRET_KEY }}
+        region: ${{ matrix.REGION }}
+    - name: 👷 Deploy test cluster
+      id: caposc
+      uses: outscale/cluster-api-provider-outscale/github_actions/deploy_cluster@main
+      with:
+        RUNNER_NAME: ${{ runner.name }}
+        OKS_ACCESS_KEY: ${{ secrets.OKS_ACCESS_KEY }}
+        OKS_SECRET_KEY: ${{ secrets.OKS_SECRET_KEY }}
+        OKS_REGION: ${{ vars.OKS_REGION }}
+        OSC_ACCESS_KEY: ${{ secrets.OSC_ACCESS_KEY }}
+        OSC_SECRET_KEY: ${{ secrets.OSC_SECRET_KEY }}
+        OSC_REGION: ${{ matrix.REGION }}
+        CLUSTER_NAME: "image-builder"
+        IMAGE_NAME: "${{ env.IMAGE_NAME }}"
+        CCM: true
