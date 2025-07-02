@@ -1,30 +1,23 @@
-## **< Project Name >**
+## **Kubernetes Image Building Workflows**
 
 [![Project Stage](https://docs.outscale.com/fr/userguide/_images/Project-Sandbox-yellow.svg)](https://docs.outscale.com/en/userguide/Open-Source-Projects.html) [![](https://dcbadge.limes.pink/api/server/HUVtY5gT6s?style=flat&theme=default-inverted)](https://discord.gg/HUVtY5gT6s)
 
 <p align="center">
-  <img alt="<Project Logo or Icon>" src="<Logo URL or Placeholder>" width="100px">
+  <img alt="Kubernetes Logo" src="https://upload.wikimedia.org/wikipedia/commons/3/39/Kubernetes_logo_without_workmark.svg" width="120px">
 </p>
 
 ---
 
 ## 🌐 Links
 
-- Documentation: <https://docs.outscale.com/en/>
-- Project website: <https://github.com/outscale/<project-name>>
 - Join our community on [Discord](https://discord.gg/HUVtY5gT6s)
-- Related tools or community: <<https://example.com>> *(optional)*
 
 ---
 
 ## 📄 Table of Contents
 
 - [Overview](#-overview)
-- [Requirements](#-requirements)
-- [Installation](#-installation)
-- [Configuration](#-configuration)
-- [Usage](#-usage)
-- [Examples](#-examples)
+- [List of images](#-list-of-images)
 - [License](#-license)
 - [Contributing](#-contributing)
 
@@ -32,111 +25,29 @@
 
 ## 🧭 Overview
 
-**< Project Name >** is a <short description of what the project does, e.g., "CLI tool to manage...">.
+**Kubernetes Image Building Workflows** is a repository containing the workflows used to build the Kubernetes OMIs published under the "Outscale Open-Source" account.
 
-Key features:
-- <Feature 1>
-- <Feature 2>
-- <Feature 3>
+These OMIs are intended for use in creating Kubernetes clusters with [CAPOSC](https://github.com/outscale/cluster-api-provider-outscale).
 
----
+The images are built using the [Kubernetes Image Builder](https://github.com/kubernetes-sigs/image-builder) and are deployed on 3 regions: eu-west-2, us-east-2 and cloudgouv-eu-west-1 using the same name.
 
-## ✅ Requirements
-
-- <Dependency 1> (e.g., Rust, Go, Python 3.11+)
-- <Dependency 2> (e.g., Git)
-- Access to the OUTSCALE API (with appropriate credentials)
+The images are produced by an open-source builder. There is no guarantee that clusters created with these images will be fully functional, and no official support is provided by Outscale.
 
 ---
 
-## ⚙️ Installation
+## 📋 List of images
 
-### Option 1: Download from Releases
+See releases.
 
-Download the latest binary from the [Releases page](https://github.com/outscale/<project-name>/releases).
-
-### Option 2: Install from source
-
-```bash
-git clone https://github.com/outscale/<project-name>.git
-cd <project-name>
-<build or install command>
-````
-
-Example (for Go projects):
-
-```bash
-go install github.com/outscale/<project-name>@latest
-```
-
----
-
-## 🛠 Configuration
-
-\<Explain where the credentials or config are stored, e.g.:>
-
-The tool expects a configuration file at `~/.osc/config.json`.
-
-### Example
-
-```json
-{
-  "default": {
-    "access_key": "MyAccessKey",
-    "secret_key": "MySecretKey",
-    "region": "eu-west-2"
-  }
-}
-```
-
-Use the `--profile` flag to select another profile.
-
----
-
-## 🚀 Usage
-
-```bash
-<command> [OPTIONS]
-```
-
-### Options
-
-| Option             | Description                            |
-| ------------------ | -------------------------------------- |
-| `-f, --flag`       | What this flag does                    |
-| `-c, --count <N>`  | Run N times                            |
-| `--profile <name>` | Use a specific profile from the config |
-| `-v, --version`    | Print version and exit                 |
-
----
-
-## 💡 Examples
-
-### Basic usage
-
-```bash
-<command>
-```
-
-### With options
-
-```bash
-<command> --flag value --profile test
-```
-
-### Using `jq` to filter JSON output
-
-```bash
-jq '.[] | select(.ResponseStatusCode != 200)' logs.json
-```
+For each version of Kubernetes, 2 images are built: one based on Ubuntu 22.04, one based on Ubuntu 24.04.
 
 ---
 
 ## 📜 License
 
-**< Project Name >** is released under the < License Name > license.
+**Kubernetes Image Building Workflows** is released under the BSD 3-Clause license.
 
-© < Year > Outscale SAS
+© 2025 Outscale SAS
 
 See [LICENSE](./LICENSE) for full details.
 
@@ -147,12 +58,3 @@ See [LICENSE](./LICENSE) for full details.
 We welcome contributions!
 
 Please read our [Contributing Guidelines](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md) before submitting a pull request.
-
----
-
-### Notes for reuse:
-- Replace all `<...>` placeholders with your content.
-- You can prefill the `Project Stage` badge with values like:
-  - `Project-Incubating-blue.svg`
-  - `Project-Graduated-green.svg`
-- You may include platform-specific instructions (macOS/Linux/Windows) in collapsible `<details>` blocks if needed.
