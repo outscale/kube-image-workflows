@@ -66,3 +66,43 @@ jobs:
         CLUSTER_NAME: "image-builder"
         IMAGE_NAME: "${{ env.IMAGE_NAME }}"
         CCM: true
+    - name: "🚀 Publish release"
+      uses: "actions/github-script@v6"
+      env:
+        IMAGE_REGION: ${{ matrix.REGION }}
+      with:
+        github-token: "${{ secrets.RELEASE_GITHUB_TOKEN }}"
+        retries: 3
+        debug: true
+        script: |
+          try {
+            const release = await github.rest.repos.getReleaseByTag({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag: process.env.GITHUB_REF_NAME,
+            });
+            console.log(release);
+            try {
+              await github.rest.repos.updateRelease({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                release_id: release.data.id,
+                body: release.data.body+"\n* "+process.env.IMAGE_NAME+" ("+process.env.IMAGE_REGION+")",
+              });
+            } catch (error) {
+                if (error.response) {
+                  console.error(`Error! Status: ${error.response.status}. Message: ${error.response.data.message}`)
+                }
+                console.error(error)
+            }
+          } catch (error) {
+            await github.rest.repos.createRelease({
+              draft: false,
+              name: "Kubernetes "+process.env.GITHUB_REF_NAME,
+              body: "New images:\n* "+process.env.IMAGE_NAME+" ("+process.env.IMAGE_REGION+")",
+              owner: context.repo.owner,
+              prerelease: false,
+              repo: context.repo.repo,
+              tag_name: process.env.GITHUB_REF_NAME,
+            });
+          }
