@@ -9,7 +9,7 @@ jobs:
   build:
     strategy:
         matrix:
-            REGION: ["us-east-2", "eu-west-2"]
+            REGION: ["us-east-2", "eu-west-2", "cloudgouv-eu-west-1"]
             TARGET: ["ubuntu-2204", "ubuntu-2404"]
     runs-on: [self-hosted, linux, "${{ matrix.REGION }}"]
     environment: ${{ matrix.REGION }}
