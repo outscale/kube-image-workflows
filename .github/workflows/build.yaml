@@ -65,7 +65,7 @@ jobs:
         OSC_REGION: ${{ matrix.REGION }}
         CLUSTER_NAME: "image-builder"
         IMAGE_NAME: "${{ env.IMAGE_NAME }}"
-        CCM: true
+        CCM: false
     - name: "🚀 Publish release"
       uses: "actions/github-script@v6"
       env:
