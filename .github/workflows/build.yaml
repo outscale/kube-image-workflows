@@ -6,7 +6,21 @@ on:
       - "v*"
 
 jobs:
+  date:
+    outputs:
+      date: ${{ steps.date.outputs.date }}
+    runs-on: [ubuntu-latest]
+    steps:
+    - name: 📆 Compute date
+      id: date
+      run: |
+        date=`date +%Y-%m-%d`
+        echo "date=$date" | tee "$GITHUB_OUTPUT"
   build:
+    needs: [date]
+    outputs:
+      output_ubuntu_2204: ${{ steps.build.outputs.output_ubuntu_2204 }}
+      output_ubuntu_2404: ${{ steps.build.outputs.output_ubuntu_2404 }}
     strategy:
         matrix:
             REGION: ["us-east-2", "eu-west-2", "cloudgouv-eu-west-1"]
@@ -30,16 +44,20 @@ jobs:
         cd image-builder/images/capi
         make deps-osc
     - name: 📦 Build image
+      id: build
       run: |
         cd image-builder/images/capi
         useradd imagebuilder
         sed -i 's/"type": "ansible"/"type": "ansible","user":"imagebuilder"/' packer/outscale/packer.json
         SERIES=`echo $KUBERNETES_VERSION | sed 's/\(v1.[1-9][0-9]\).*$/\1/'`
         DEB=`echo $KUBERNETES_VERSION | sed 's/v//'`
-        export PACKER_FLAGS="--var kubernetes_semver=$KUBERNETES_VERSION --var kubernetes_series=$SERIES --var kubernetes_deb_version=$DEB-1.1 --var overwrite_existing=true"
+        date=${{ needs.date.outputs.date }}
+        omi_name=${{ matrix.TARGET }}-kubernetes-$KUBERNETES_VERSION-$date
+        source_ip=`curl https://api.ipify.org`
+        export PACKER_FLAGS="--var kubernetes_semver=$KUBERNETES_VERSION --var kubernetes_series=$SERIES --var kubernetes_deb_version=$DEB-1.1 --var overwrite_existing=true --var omi_name=$omi_name --var ssh_source_cidr=$source_ip/32"
         make build-osc-${{ matrix.TARGET }}
-        date=`date +%Y-%m-%d`
-        echo "IMAGE_NAME=${{ matrix.TARGET }}-kubernetes-$KUBERNETES_VERSION-$date" | tee $GITHUB_ENV
+        target=`echo ${{ matrix.TARGET }} | sed 's/-/_/g'`
+        echo "output_$target=$omi_name" | tee "$GITHUB_OUTPUT"
       env:
         KUBERNETES_VERSION: ${{ github.ref_name }}
         OSC_ACCESS_KEY: ${{ secrets.OSC_ACCESS_KEY }}
@@ -66,6 +84,10 @@ jobs:
         CLUSTER_NAME: "image-builder"
         IMAGE_NAME: "${{ env.IMAGE_NAME }}"
         CCM: false
+  release:
+    needs: [build]
+    runs-on: [self-hosted, linux]
+    steps:
     - name: "🚀 Publish release"
       uses: "actions/github-script@v6"
       env:
@@ -75,34 +97,12 @@ jobs:
         retries: 3
         debug: true
         script: |
-          try {
-            const release = await github.rest.repos.getReleaseByTag({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              tag: process.env.GITHUB_REF_NAME,
-            });
-            console.log(release);
-            try {
-              await github.rest.repos.updateRelease({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                release_id: release.data.id,
-                body: release.data.body+"\n* "+process.env.IMAGE_NAME+" ("+process.env.IMAGE_REGION+")",
-              });
-            } catch (error) {
-                if (error.response) {
-                  console.error(`Error! Status: ${error.response.status}. Message: ${error.response.data.message}`)
-                }
-                console.error(error)
-            }
-          } catch (error) {
             await github.rest.repos.createRelease({
               draft: false,
               name: "Kubernetes "+process.env.GITHUB_REF_NAME,
-              body: "New images:\n* "+process.env.IMAGE_NAME+" ("+process.env.IMAGE_REGION+")",
+              body: "New images: "+needs.build.outputs.values().join(", "),
               owner: context.repo.owner,
               prerelease: false,
               repo: context.repo.repo,
               tag_name: process.env.GITHUB_REF_NAME,
             });
-          }
