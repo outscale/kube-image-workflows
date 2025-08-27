@@ -57,7 +57,8 @@ jobs:
         export PACKER_FLAGS="--var kubernetes_semver=$KUBERNETES_VERSION --var kubernetes_series=$SERIES --var kubernetes_deb_version=$DEB-1.1 --var overwrite_existing=true --var omi_name=$omi_name --var ssh_source_cidr=$source_ip/32"
         make build-osc-${{ matrix.TARGET }}
         target=`echo ${{ matrix.TARGET }} | sed 's/-/_/g'`
-        echo "output_$target=$omi_name" | tee "$GITHUB_OUTPUT"
+        echo "output_$target=$omi_name" >> "$GITHUB_OUTPUT"
+        echo "IMAGE_NAME=$omi_name" >> $GITHUB_ENV
       env:
         KUBERNETES_VERSION: ${{ github.ref_name }}
         OSC_ACCESS_KEY: ${{ secrets.OSC_ACCESS_KEY }}
