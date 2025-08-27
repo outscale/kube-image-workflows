@@ -72,6 +72,7 @@ jobs:
         secret_key: ${{ secrets.OSC_SECRET_KEY }}
         region: ${{ matrix.REGION }}
     - name: 👷 Deploy test cluster
+      if: matrix.REGION != 'cloudgouv-eu-west-1' 
       id: caposc
       uses: outscale/cluster-api-provider-outscale/github_actions/deploy_cluster@main
       with:
