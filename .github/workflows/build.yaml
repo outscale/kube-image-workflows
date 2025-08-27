@@ -93,7 +93,8 @@ jobs:
     - name: "🚀 Publish release"
       uses: "actions/github-script@v6"
       env:
-        IMAGE_REGION: ${{ matrix.REGION }}
+        IMAGE_UBUNTU_2204: ${{ needs.build.outputs.output_ubuntu_2204 }}
+        IMAGE_UBUNTU_2404: ${{ needs.build.outputs.output_ubuntu_2404 }}
       with:
         github-token: "${{ secrets.RELEASE_GITHUB_TOKEN }}"
         retries: 3
@@ -102,7 +103,7 @@ jobs:
             await github.rest.repos.createRelease({
               draft: false,
               name: "Kubernetes "+process.env.GITHUB_REF_NAME,
-              body: "New images: "+needs.build.outputs.values().join(", "),
+              body: "New images: \n* "+process.env.IMAGE_UBUNTU_2204+"\n* "+process.env.IMAGE_UBUNTU_2404,
               owner: context.repo.owner,
               prerelease: false,
               repo: context.repo.repo,
