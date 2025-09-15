@@ -31,8 +31,6 @@ These OMIs are intended for use in creating Kubernetes clusters with [CAPOSC](ht
 
 The images are built using the [Kubernetes Image Builder](https://github.com/kubernetes-sigs/image-builder) and are deployed on 3 regions: eu-west-2, us-east-2 and cloudgouv-eu-west-1 using the same name.
 
-> A [fork of the Kubernetes Image Builder](https://github.com/outscale/kubernetes-image-builder) with an updated configuration is currently used. We will switch to the standard image builder as soon as the updated configuration has been merged upstream.
-
 The images are produced by an open-source builder. There is no guarantee that clusters created with these images will be fully functional, and no official support is provided by Outscale.
 
 ---
