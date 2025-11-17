@@ -33,10 +33,8 @@ jobs:
     - name: ⬇️ Checkout image builder repository
       uses: actions/checkout@v4
       with:
-        # repository: 'outscale/kubernetes-image-builder'
         repository: 'kubernetes-sigs/image-builder'
         path: "image-builder"
-        ref: "image_name"
     - name: ⬇️ Install ansible
       run: |
         python3 -m pip install ansible
