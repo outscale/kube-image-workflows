@@ -18,6 +18,7 @@
 
 - [Overview](#-overview)
 - [List of images](#-list-of-images)
+- [Releasing new images](#-releasing-new-images)
 - [License](#-license)
 - [Contributing](#-contributing)
 
@@ -40,6 +41,29 @@ The images are produced by an open-source builder. There is no guarantee that cl
 See releases.
 
 For each version of Kubernetes, 2 images are built: one based on Ubuntu 22.04, one based on Ubuntu 24.04.
+
+---
+
+## 🚀 Releasing new images
+
+The runc version is defined by the RUNC_VERSION variable.
+The containerd version is defined by the CONTAINERD_VERSION variable.
+
+New images are built when a new tag is pushed. The tag name defines the Kubernetes version to use.
+
+```shell
+export RELEASE_TAG=v1.33.6
+git tag -s ${RELEASE_TAG} -m "🔖 Kubernetes ${RELEASE_TAG}"
+git push origin ${RELEASE_TAG}
+```
+
+When re-releasing a previously released Kubernetes version, a `/[some additional comment]` suffix can be added to the tag, it will be ignored.
+
+```shell
+export RELEASE_TAG=v1.33.6/runc-1.2.6
+git tag -s ${RELEASE_TAG} -m "🔖 Kubernetes ${RELEASE_TAG}"
+git push origin ${RELEASE_TAG}
+```
 
 ---
 

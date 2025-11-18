@@ -21,6 +21,8 @@ jobs:
     outputs:
       output_ubuntu_2204: ${{ steps.build.outputs.output_ubuntu_2204 }}
       output_ubuntu_2404: ${{ steps.build.outputs.output_ubuntu_2404 }}
+      runc_version: ${{ steps.build.outputs.runc_version }}
+      containerd_version: ${{ steps.build.outputs.containerd_version }}
     strategy:
         matrix:
             REGION: ["us-east-2", "eu-west-2", "cloudgouv-eu-west-1"]
@@ -45,25 +47,37 @@ jobs:
     - name: 📦 Build image
       id: build
       run: |
+        set -ex
         cd image-builder/images/capi
         useradd imagebuilder
         sed -i 's/"type": "ansible"/"type": "ansible","user":"imagebuilder"/' packer/outscale/packer.json
+        KUBERNETES_VERSION=`echo $KUBERNETES_VERSION | cut -d / -f 1`
         SERIES=`echo $KUBERNETES_VERSION | sed 's/\(v1.[1-9][0-9]\).*$/\1/'`
         DEB=`echo $KUBERNETES_VERSION | sed 's/v//'`
         date=${{ needs.date.outputs.date }}
         omi_name=${{ matrix.TARGET }}-kubernetes-$KUBERNETES_VERSION-$date
         source_ip=`curl https://api.ipify.org`
-        export PACKER_FLAGS="--var kubernetes_semver=$KUBERNETES_VERSION --var kubernetes_series=$SERIES --var kubernetes_deb_version=$DEB-1.1 --var overwrite_existing=true --var omi_name=$omi_name --var ssh_source_cidr=$source_ip/32"
+        if [ -z "$RUNC_VERSION" ]; then
+          RUNC_VERSION=`jq -r .runc_version packer/config/containerd.json`
+        fi
+        if [ -z "$CONTAINERD_VERSION" ]; then
+          CONTAINERD_VERSION=`jq -r .containerd_version packer/config/containerd.json`
+        fi
+        export PACKER_FLAGS="--var runc_version=$RUNC_VERSION --var containerd_version=$CONTAINERD_VERSION --var kubernetes_semver=$KUBERNETES_VERSION --var kubernetes_series=$SERIES --var kubernetes_deb_version=$DEB-1.1 --var overwrite_existing=true --var omi_name=$omi_name --var ssh_source_cidr=$source_ip/32"
         make build-osc-${{ matrix.TARGET }}
         target=`echo ${{ matrix.TARGET }} | sed 's/-/_/g'`
-        echo "output_$target=$omi_name" >> "$GITHUB_OUTPUT"
+        echo "output_$target=$omi_name" >> $GITHUB_OUTPUT
         echo "IMAGE_NAME=$omi_name" >> $GITHUB_ENV
+        echo "runc_version=$RUNC_VERSION" >> $GITHUB_OUTPUT
+        echo "containerd_version=$CONTAINERD_VERSION" >> $GITHUB_OUTPUT
       env:
         KUBERNETES_VERSION: ${{ github.ref_name }}
         OSC_ACCESS_KEY: ${{ secrets.OSC_ACCESS_KEY }}
         OSC_SECRET_KEY: ${{ secrets.OSC_SECRET_KEY }}
         OSC_REGION: ${{ matrix.REGION }}
         OSC_ACCOUNT_ID: ${{ secrets.OSC_ACCOUNT_ID }}
+        RUNC_VERSION: ${{ vars.RUNC_VERSION}}
+        CONTAINERD_VERSION: ${{ vars.CONTAINERD_VERSION}}
     - name: 🧹 Frieza
       uses: outscale/frieza-github-actions/frieza-clean@master
       with:
@@ -94,6 +108,8 @@ jobs:
       env:
         IMAGE_UBUNTU_2204: ${{ needs.build.outputs.output_ubuntu_2204 }}
         IMAGE_UBUNTU_2404: ${{ needs.build.outputs.output_ubuntu_2404 }}
+        RUNC_VERSION: ${{ needs.build.outputs.runc_version }}
+        CONTAINERD_VERSION: ${{ needs.build.outputs.containerd_version }}
       with:
         github-token: "${{ secrets.RELEASE_GITHUB_TOKEN }}"
         retries: 3
@@ -102,7 +118,7 @@ jobs:
             await github.rest.repos.createRelease({
               draft: false,
               name: "Kubernetes "+process.env.GITHUB_REF_NAME,
-              body: "New images: \n* "+process.env.IMAGE_UBUNTU_2204+"\n* "+process.env.IMAGE_UBUNTU_2404,
+              body: "runc: "+process.env.RUNC_VERSION+" containerd: "+process.env.CONTAINERD_VERSION+\nNew images:\n* "+process.env.IMAGE_UBUNTU_2204+"\n* "+process.env.IMAGE_UBUNTU_2404,
               owner: context.repo.owner,
               prerelease: false,
               repo: context.repo.repo,
