@@ -119,10 +119,17 @@ jobs:
         retries: 3
         debug: true
         script: |
+            let body = "OMIs built with:\n" +
+              "* image-builder: " + process.env.IMAGE_BUILDER_VERSION + "\n"+
+              "* runc: " + process.env.RUNC_VERSION + "\n" +
+              "* containerd: " + process.env.CONTAINERD_VERSION + "\n" +
+              "\nNew OMIs:\n" +
+              "* " + process.env.IMAGE_UBUNTU_2204 + "\n" +
+              "* " + process.env.IMAGE_UBUNTU_2404
             await github.rest.repos.createRelease({
               draft: false,
-              name: "Kubernetes "+process.env.GITHUB_REF_NAME,
-              body: "Image built with image-builder "+process.env.IMAGE_BUILDER_VERSION+"\n\n* runc: "+process.env.RUNC_VERSION+"\n* containerd: "+process.env.CONTAINERD_VERSION+"\n\nNew images:\n* "+process.env.IMAGE_UBUNTU_2204+"\n* "+process.env.IMAGE_UBUNTU_2404,
+              name: "Kubernetes OMI "+process.env.GITHUB_REF_NAME,
+              body: body,
               owner: context.repo.owner,
               prerelease: false,
               repo: context.repo.repo,
