@@ -5,6 +5,9 @@ on:
     tags:
       - "v*"
 
+permissions:
+  contents: write
+
 jobs:
   date:
     outputs:
@@ -31,12 +34,13 @@ jobs:
     environment: ${{ matrix.REGION }}
     steps:
     - name: ⬇️ Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
     - name: ⬇️ Checkout image builder repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         repository: 'kubernetes-sigs/image-builder'
         path: "image-builder"
+        ref: ${{ vars.IMAGE_BUILDER_VERSION}}
     - name: ⬇️ Install ansible
       run: |
         python3 -m pip install ansible
@@ -104,21 +108,21 @@ jobs:
     runs-on: [self-hosted, linux]
     steps:
     - name: "🚀 Publish release"
-      uses: "actions/github-script@v6"
+      uses: "actions/github-script@v8"
       env:
         IMAGE_UBUNTU_2204: ${{ needs.build.outputs.output_ubuntu_2204 }}
         IMAGE_UBUNTU_2404: ${{ needs.build.outputs.output_ubuntu_2404 }}
         RUNC_VERSION: ${{ needs.build.outputs.runc_version }}
         CONTAINERD_VERSION: ${{ needs.build.outputs.containerd_version }}
+        IMAGE_BUILDER_VERSION: ${{ vars.IMAGE_BUILDER_VERSION }}
       with:
-        github-token: "${{ secrets.RELEASE_GITHUB_TOKEN }}"
         retries: 3
         debug: true
         script: |
             await github.rest.repos.createRelease({
               draft: false,
               name: "Kubernetes "+process.env.GITHUB_REF_NAME,
-              body: "runc: "+process.env.RUNC_VERSION+"\ncontainerd: "+process.env.CONTAINERD_VERSION+"\n\nNew images:\n* "+process.env.IMAGE_UBUNTU_2204+"\n* "+process.env.IMAGE_UBUNTU_2404,
+              body: "Image built with image-builder "+process.env.IMAGE_BUILDER_VERSION+"\n\n* runc: "+process.env.RUNC_VERSION+"\n* containerd: "+process.env.CONTAINERD_VERSION+"\n\nNew images:\n* "+process.env.IMAGE_UBUNTU_2204+"\n* "+process.env.IMAGE_UBUNTU_2404,
               owner: context.repo.owner,
               prerelease: false,
               repo: context.repo.repo,
