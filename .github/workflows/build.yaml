@@ -34,9 +34,9 @@ jobs:
     environment: ${{ matrix.REGION }}
     steps:
     - name: ⬇️ Checkout repository
-      uses: actions/checkout@v5
+      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
     - name: ⬇️ Checkout image builder repository
-      uses: actions/checkout@v5
+      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       with:
         repository: 'kubernetes-sigs/image-builder'
         path: "image-builder"
