@@ -108,7 +108,7 @@ jobs:
     runs-on: [ubuntu-latest]
     steps:
     - name: "🚀 Publish release"
-      uses: "actions/github-script@v8"
+      uses: "actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd" # v8
       env:
         IMAGE_UBUNTU_2204: ${{ needs.build.outputs.output_ubuntu_2204 }}
         IMAGE_UBUNTU_2404: ${{ needs.build.outputs.output_ubuntu_2404 }}
