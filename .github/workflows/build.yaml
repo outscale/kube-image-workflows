@@ -55,6 +55,7 @@ jobs:
         cd image-builder/images/capi
         useradd imagebuilder
         sed -i 's/"type": "ansible"/"type": "ansible","user":"imagebuilder"/' packer/outscale/packer.json
+        sed -i 's/1.5.0/1.6.0-beta.1/' packer/outscale/config.pkr.hcl
         KUBERNETES_VERSION=`echo $KUBERNETES_VERSION | cut -d - -f 1`
         SERIES=`echo $KUBERNETES_VERSION | sed 's/\(v1.[1-9][0-9]\).*$/\1/'`
         DEB=`echo $KUBERNETES_VERSION | sed 's/v//'`
