@@ -29,7 +29,7 @@ jobs:
     strategy:
         matrix:
             REGION: ["us-east-2", "eu-west-2", "cloudgouv-eu-west-1"]
-            TARGET: ["ubuntu-2204", "ubuntu-2404"]
+            TARGET: ["ubuntu-2404", "ubuntu-2604"]
     runs-on: [self-hosted, linux, "${{ matrix.REGION }}"]
     environment: ${{ matrix.REGION }}
     steps:
@@ -55,7 +55,6 @@ jobs:
         cd image-builder/images/capi
         useradd imagebuilder
         sed -i 's/"type": "ansible"/"type": "ansible","user":"imagebuilder"/' packer/outscale/packer.json
-        sed -i 's/1.5.0/1.6.0-beta.1/' packer/outscale/config.pkr.hcl
         KUBERNETES_VERSION=`echo $KUBERNETES_VERSION | cut -d - -f 1`
         SERIES=`echo $KUBERNETES_VERSION | sed 's/\(v1.[1-9][0-9]\).*$/\1/'`
         DEB=`echo $KUBERNETES_VERSION | sed 's/v//'`
@@ -84,15 +83,15 @@ jobs:
         RUNC_VERSION: ${{ vars.RUNC_VERSION}}
         CONTAINERD_VERSION: ${{ vars.CONTAINERD_VERSION}}
     - name: 🧹 Frieza
-      uses: outscale/frieza-github-actions/frieza-clean@68ffd39d7e181f3548369e332242b329b04a3182 # master
+      uses: outscale/frieza-github-actions/frieza-clean@d361dd8cc864cfb9575429ee54fde4a0e8e7b124 # v0.17.2
       with:
         access_key: ${{ secrets.OSC_ACCESS_KEY }}
         secret_key: ${{ secrets.OSC_SECRET_KEY }}
         region: ${{ matrix.REGION }}
     - name: 👷 Deploy test cluster
-      if: matrix.REGION != 'cloudgouv-eu-west-1' 
+      if: matrix.REGION != 'cloudgouv-eu-west-1'
       id: caposc
-      uses: outscale/cluster-api-provider-outscale/github_actions/deploy_cluster@3f7f3a932cf65a003f259d8d86c3f2fe293df2ee # main
+      uses: outscale/cluster-api-provider-outscale/.github/actions/deploy_cluster@e847b18eb46f68896868bf83597c78ed1eb02d81 # v1.5.3
       with:
         RUNNER_NAME: ${{ runner.name }}
         OKS_ACCESS_KEY: ${{ secrets.OKS_ACCESS_KEY }}
