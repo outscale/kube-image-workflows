@@ -83,7 +83,7 @@ jobs:
         RUNC_VERSION: ${{ vars.RUNC_VERSION}}
         CONTAINERD_VERSION: ${{ vars.CONTAINERD_VERSION}}
     - name: 🧹 Frieza
-      uses: outscale/frieza-github-actions/frieza-clean@d361dd8cc864cfb9575429ee54fde4a0e8e7b124 # v0.17.2
+      uses: outscale/frieza-github-actions/frieza-clean@5bb625dd5ae3c7712cef931f168e91899f4f0055 # v0.18.0
       with:
         access_key: ${{ secrets.OSC_ACCESS_KEY }}
         secret_key: ${{ secrets.OSC_SECRET_KEY }}
